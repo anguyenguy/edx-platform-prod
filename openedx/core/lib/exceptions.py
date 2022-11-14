@@ -24,3 +24,8 @@ class DiscussionNotFoundError(ObjectDoesNotExist):
     Discussion Module was not found.
     """
     pass  # lint-amnesty, pylint: disable=unnecessary-pass
+
+
+class NoAuthHandlerFound(Exception):
+    """Is raised when no auth handlers were found ready to authenticate."""
+    pass  # lint-amnesty, pylint: disable=unnecessary-pass
