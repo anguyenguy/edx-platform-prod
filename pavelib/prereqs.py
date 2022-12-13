@@ -136,7 +136,11 @@ def node_prereqs_installation():
         npm_log_file_path = f'{Env.GEN_LOG_DIR}/npm-install.{shard_str}.log'
     else:
         npm_log_file_path = f'{Env.GEN_LOG_DIR}/npm-install.log'
-    npm_log_file = open(npm_log_file_path, 'wb')  # lint-amnesty, pylint: disable=consider-using-with
+    try:
+        npm_log_file = open(npm_log_file_path, 'wb')  # lint-amnesty, pylint: disable=consider-using-with
+    except FileNotFoundError:
+        print(f"npm log file does not exist. Creating new log file at: {npm_log_file_path}")
+        npm_log_file = open(npm_log_file_path, 'wb+')
     npm_command = 'npm clean-install --verbose'.split()
 
     # The implementation of Paver's `sh` function returns before the forked

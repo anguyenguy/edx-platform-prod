@@ -56,7 +56,7 @@ class Env:
     QUALITY_DIR = REPORT_DIR / 'quality_junitxml'
 
     # Generic log dir
-    GEN_LOG_DIR = REPO_ROOT / "test_root" / "log"
+    GEN_LOG_DIR = path(os.environ.get("GEN_LOG_DIR")) if os.environ.get("GEN_LOG_DIR") else REPO_ROOT / "test_root" / "log"
 
     # Python unittest dirs
     PYTHON_COVERAGERC = REPO_ROOT / ".coveragerc"
