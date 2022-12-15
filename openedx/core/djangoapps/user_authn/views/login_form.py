@@ -97,7 +97,7 @@ def get_login_session_form(request):
 
     # Translators: These instructions appear on the login form, immediately
     # below a field meant to hold the user's email address.
-    email_instructions = _("The email address you used to register with {platform_name}").format(
+    email_instructions = _("The email address you used to register with Funix").format(
         platform_name=configuration_helpers.get_value('PLATFORM_NAME', settings.PLATFORM_NAME)
     )
 
@@ -262,6 +262,7 @@ def login_and_registration_form(request, initial_mode="login"):
             'enterprise_slug_login_url': get_enterprise_slug_login_url(),
             'is_enterprise_enable': enterprise_enabled(),
             'is_require_third_party_auth_enabled': is_require_third_party_auth_enabled(),
+            'enable_coppa_compliance': settings.ENABLE_COPPA_COMPLIANCE,
             'edx_user_info_cookie_name': settings.EDXMKTG_USER_INFO_COOKIE_NAME,
         },
         'login_redirect_url': redirect_to,  # This gets added to the query string of the "Sign In" button in header

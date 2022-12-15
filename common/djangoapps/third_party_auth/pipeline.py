@@ -56,7 +56,9 @@ rather than spreading them across two functions in the pipeline.
 
 See https://python-social-auth.readthedocs.io/en/latest/pipeline.html for more docs.
 """
-
+import logging
+import random
+import string
 
 import base64
 import hashlib
@@ -71,7 +73,7 @@ import six
 import social_django
 from django.conf import settings
 from django.contrib.auth.models import User  # lint-amnesty, pylint: disable=imported-auth-user
-from django.contrib.auth import logout, REDIRECT_FIELD_NAME
+from django.contrib.auth import logout
 from django.core.mail.message import EmailMessage
 from django.http import HttpResponseBadRequest
 from django.shortcuts import redirect
@@ -87,9 +89,9 @@ from lms.djangoapps.verify_student.models import SSOVerification
 from lms.djangoapps.verify_student.utils import earliest_allowed_verification_date
 from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
 from openedx.core.djangoapps.user_api import accounts
+from openedx.core.djangoapps.user_api.accounts.utils import username_suffix_generator
 from openedx.core.djangoapps.user_authn import cookies as user_authn_cookies
 from openedx.core.djangoapps.user_authn.toggles import is_require_third_party_auth_enabled
-from openedx.core.djangoapps.user_authn.utils import is_safe_login_or_logout_redirect
 from common.djangoapps.third_party_auth.utils import (
     get_associated_user_by_email_response,
     get_user_from_email,
@@ -102,6 +104,20 @@ from common.djangoapps.track import segment
 from common.djangoapps.util.json_request import JsonResponse
 
 from . import provider
+
+#=================== CUSTOM FOR PP1: IMPORT =====================
+from django.contrib.auth.models import User
+from openedx.core.djangoapps.user_authn.views.registration_form import (
+    AccountCreationForm,
+    get_registration_extension_form
+)
+from common.djangoapps.student.helpers import (
+    do_create_account
+)
+
+import time
+
+#=================== END OF CUSTOM ==============================
 
 # These are the query string params you can pass
 # to the URL that starts the authentication process.
@@ -275,6 +291,20 @@ def lift_quarantine(request):
     """
     request.session.pop('third_party_auth_quarantined_modules', None)
 
+####===================== CUSTOM FOR PP1 FUNCTION ========================
+def _is_funix_email(email):
+    # emails of FUNiX has to contain @funix.edu.vn in the end.
+    _funix_email_tail = '@funix.edu.vn'
+    if not email[-13:].__eq__(_funix_email_tail):
+        return False
+    return True
+
+def _create_random_password(length):
+    letters = string.ascii_lowercase
+    result_str = ''.join(random.choice(letters) for i in range(length))
+    print("Random string of length", length, "is:", result_str)
+####==========================   END CUSTOM  ==============================
+
 
 def get_authenticated_user(auth_provider, username, uid):
     """Gets a saved user authenticated by a particular backend.
@@ -298,15 +328,79 @@ def get_authenticated_user(auth_provider, username, uid):
         user has no social auth associated with the given backend.
         AssertionError: if the user is not authenticated.
     """
-    match = social_django.models.DjangoStorage.user.get_social_auth(provider=auth_provider.backend_name, uid=uid)
+    #====================== CUSTOM FOR PP1 CUSTOM FUNCTION ============================
+    """
+    IN HERE WHERE WANT TO CUSTOM FOR JUST FUNIX GOOGLE ACCOUNT SIGN IN
+    We have parametes: username = username; email = uid; password = random
+    """
+    # Check is funix email
+    # print('PP1:','=====','email',uid)
 
-    if not match or match.user.username != username:
-        raise User.DoesNotExist
+    if not _is_funix_email(email=uid):
+        raise ValueError("This is not funix email")
+    try:
+        user = User.objects.get(email=uid)
+    except:
+        print('PP1:', '==========: ', 'Create new account for user:', username)
+        # If do not existing user profile of this account, we want to create new one
+        modified_username = username + str(int(time.time())) 
+        generate_pw = _create_random_password(8)
+        params = {
+            'next': '/', 
+            'email': uid, 
+            'name': username, 
+            'username': modified_username, 
+            'level_of_education': '', 
+            'gender': '', 
+            'year_of_birth': '', 
+            'mailing_address': '', 
+            'goals': '', 
+            'terms_of_service': 'true', 
+            'password': "{}".format(generate_pw)
+        }
+        extra_fields=  {
+            'confirm_email': 'hidden', 
+            'level_of_education': 'optional', 
+            'gender': 'optional', 
+            'year_of_birth': 'optional', 
+            'mailing_address': 'optional', 
+            'goals': 'optional', 
+            'honor_code': 'hidden', 
+            'terms_of_service': 'required', 
+            'city': 'hidden', 
+            'country': 'hidden'
+        }
+        extended_profile_fields= {}
+        tos_required = True
 
-    user = match.user
-    user.backend = auth_provider.get_authentication_backend()
+        form = AccountCreationForm(
+            data=params,
+            extra_fields=extra_fields,
+            extended_profile_fields=extended_profile_fields,
+            do_third_party_auth=False,
+            tos_required=tos_required,
+        )
+        custom_form = get_registration_extension_form(data=params)
+        (user, profile, registration) = do_create_account(form, custom_form)
+
+        # user = User(
+        #     username=username,
+        #     email=uid,
+        #     is_active=False
+        # )
+        # user.set_password(_create_random_password(8))
+        # user.save()
+        # print('PP1:', '==========: ', 'Create new user successful: ', user)
+    #match = social_django.models.DjangoStorage.user.get_social_auth(provider='google-oauth2', uid=uid)
+
+    # if not match or match.user.username != username:
+    #     raise User.DoesNotExist
+    
+    user.backend = 'social_core.backends.google.GoogleOAuth2'
+    # user.backend = auth_provider.get_authentication_backend()
+
     return user
-
+    #============================= END CUSTOM =====================================
 
 def _get_enabled_provider(provider_id):
     """Gets an enabled provider by its provider_id member or throws."""
@@ -480,7 +574,7 @@ def parse_query_params(strategy, response, *args, **kwargs):
     """Reads whitelisted query params, transforms them into pipeline args."""
     # If auth_entry is not in the session, we got here by a non-standard workflow.
     # We simply assume 'login' in that case.
-    auth_entry = strategy.request.session.get(AUTH_ENTRY_KEY, AUTH_ENTRY_LOGIN)
+    auth_entry = strategy.request.session.get(AUTH_ENTRY_KEY) or AUTH_ENTRY_LOGIN
     if auth_entry not in _AUTH_ENTRY_CHOICES:
         raise AuthEntryError(strategy.request.backend, 'auth_entry invalid')
 
@@ -1008,33 +1102,11 @@ def get_username(strategy, details, backend, user=None, *args, **kwargs):  # lin
         # The final_username may be empty and will skip the loop.
         # We are using our own version of user_exists to avoid possible case sensitivity issues.
         while not final_username or len(final_username) < min_length or user_exists({'username': final_username}):
-            username = short_username + uuid4().hex[:uuid_length]
+            # adding a dash between user-supplied and system-generated values to avoid weird combinations
+            username = short_username + '-' + username_suffix_generator(uuid_length)
             final_username = slug_func(clean_func(username[:max_length]))
             logger.info('[THIRD_PARTY_AUTH] New username generated. Username: {username}'.format(
                 username=final_username))
     else:
         final_username = storage.user.get_username(user)
     return {'username': final_username}
-
-
-def ensure_redirect_url_is_safe(strategy, *args, **kwargs):
-    """
-    Ensure that the redirect url is save if a user logs in or registers by
-    directly hitting the TPA url i.e /auth/login/backend_name?next=<redirect_to>
-    Check it against the LOGIN_REDIRECT_WHITELIST. If it is not safe then
-    redirect to SOCIAL_AUTH_LOGIN_REDIRECT_URL (defaults to /dashboard)
-    """
-    redirect_to = strategy.session_get(REDIRECT_FIELD_NAME, None)
-    request = strategy.request
-
-    if redirect_to and request:
-        is_safe = is_safe_login_or_logout_redirect(
-            redirect_to=redirect_to,
-            request_host=request.get_host(),
-            dot_client_id=None,
-            require_https=request.is_secure(),
-        )
-
-        if not is_safe:
-            safe_redirect_url = getattr(settings, 'SOCIAL_AUTH_LOGIN_REDIRECT_URL', '/dashboard')
-            strategy.session_set(REDIRECT_FIELD_NAME, safe_redirect_url)

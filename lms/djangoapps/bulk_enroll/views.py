@@ -118,6 +118,7 @@ class BulkEnrollView(APIView):
                             user_data['after']['cohort'] = cohort_name
 
                 response_dict['courses'][course_id] = response_content
+                print("PP2","Successful")
             return Response(data=response_dict, status=status.HTTP_200_OK)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

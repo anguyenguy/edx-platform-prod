@@ -107,7 +107,7 @@
                     formErrorsTitle = _.sprintf(
                         gettext('An error occurred when signing you in to %s.'),
                         this.platformName
-                    );
+                    );  
                     this.renderErrors(formErrorsTitle, [this.errorMessage]);
                 } else if (this.currentProvider) {
                     /* If we're already authenticated with a third-party
@@ -270,9 +270,10 @@
 
             renderThirdPartyAuthWarning: function() {
                 var message = _.sprintf(
-                    gettext('You have successfully signed into %(currentProvider)s, but your %(currentProvider)s' +
-                            ' account does not have a linked %(platformName)s account. To link your accounts,' +
-                            ' sign in now using your %(platformName)s password.'),
+                    gettext('Hiện tại bạn đang không dùng tài khoản email của FUNiX để đăng nhập, ' +
+                            'bạn vui lòng đăng nhập lại hệ thống với tài khoản FUNiX (@funix.edu.vn). <br/>' +
+                            'Recently, you are not use FUNiX email to login, {line_break}' +
+                            'please login with FUNiX email (@funix.edu.vn) again!'),
                     {currentProvider: this.currentProvider, platformName: this.platformName}
                 );
 

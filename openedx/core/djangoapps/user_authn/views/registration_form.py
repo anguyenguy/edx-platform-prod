@@ -23,7 +23,17 @@ from openedx.core.djangoapps.user_api import accounts
 from openedx.core.djangoapps.user_api.helpers import FormDescription
 from openedx.core.djangoapps.user_authn.utils import is_registration_api_v1 as is_api_v1
 from openedx.core.djangolib.markup import HTML, Text
-from openedx.features.enterprise_support.api import enterprise_customer_for_request
+
+
+### PP1: In here we comment enterprise_support.api for unknow reason make error => we check if it has error because of this
+#from openedx.features.enterprise_support.api import enterprise_customer_for_request
+
+
+#============== CUSTOM FOR PP1
+# from openedx.features.enterprise_support.api import enterprise_customer_for_request
+### PP1: In here we comment enterprise_support.api for unknow reason make error => we check if it has error because of this
+#from openedx.features.enterprise_support.api import enterprise_customer_for_request
+
 from common.djangoapps.student.models import (
     CourseEnrollmentAllowed,
     UserProfile,
@@ -324,6 +334,7 @@ class RegistrationFormFactory:
         "terms_of_service",
         "profession",
         "specialty",
+        "marketing_emails_opt_in",
     ]
 
     def _is_field_visible(self, field_name):
@@ -340,12 +351,18 @@ class RegistrationFormFactory:
 
     def __init__(self):
 
+        if settings.ENABLE_COPPA_COMPLIANCE and 'year_of_birth' in self.EXTRA_FIELDS:
+            self.EXTRA_FIELDS.remove('year_of_birth')
+
         # Backwards compatibility: Honor code is required by default, unless
         # explicitly set to "optional" in Django settings.
         self._extra_fields_setting = copy.deepcopy(configuration_helpers.get_value('REGISTRATION_EXTRA_FIELDS'))
         if not self._extra_fields_setting:
             self._extra_fields_setting = copy.deepcopy(settings.REGISTRATION_EXTRA_FIELDS)
         self._extra_fields_setting["honor_code"] = self._extra_fields_setting.get("honor_code", "required")
+
+        if settings.MARKETING_EMAILS_OPT_IN:
+            self._extra_fields_setting['marketing_emails_opt_in'] = 'optional'
 
         # Check that the setting is configured correctly
         for field_name in self.EXTRA_FIELDS:
@@ -427,7 +444,7 @@ class RegistrationFormFactory:
                             FormDescription.FIELD_TYPE_MAP.get(field.__class__))
                         if not field_type:
                             raise ImproperlyConfigured(
-                                u"Field type '{}' not recognized for registration extension field '{}'.".format(
+                                "Field type '{}' not recognized for registration extension field '{}'.".format(
                                     field_type,
                                     field_name
                                 )
@@ -597,7 +614,10 @@ class RegistrationFormFactory:
 
         # The labels are marked for translation in UserProfile model definition.
         # pylint: disable=translation-of-non-string
+
         options = [(name, _(label)) for name, label in UserProfile.LEVEL_OF_EDUCATION_CHOICES]
+        if settings.ENABLE_COPPA_COMPLIANCE:
+            options = filter(lambda op: op[0] != 'el', options)
         form_desc.add_field(
             "level_of_education",
             label=education_level_label,
@@ -652,6 +672,27 @@ class RegistrationFormFactory:
             options=options,
             include_default_option=True,
             required=required
+        )
+
+    def _add_marketing_emails_opt_in_field(self, form_desc, required=False):
+        """Add a marketing email checkbox to form description.
+        Arguments:
+            form_desc: A form description
+        Keyword Arguments:
+            required (bool): Whether this field is required; defaults to False
+        """
+        opt_in_label = _(
+            'I agree that {platform_name} may send me marketing messages.').format(
+                platform_name=configuration_helpers.get_value('PLATFORM_NAME', settings.PLATFORM_NAME),
+        )
+
+        form_desc.add_field(
+            'marketing_emails_opt_in',
+            label=opt_in_label,
+            field_type="checkbox",
+            exposed=True,
+            default=True,  # the checkbox will automatically be checked; meaning user has opted in
+            required=required,
         )
 
     def _add_field_with_configurable_select_options(self, field_name, field_label, form_desc, required=False):
@@ -1085,51 +1126,58 @@ class RegistrationFormFactory:
                     # enterprise context, we need to hide all fields except for terms of service and
                     # ensure that the user explicitly checks that field.
                     # pylint: disable=consider-using-ternary
+                    print("PP1===========>", 'enterprise_customer_for_request is using.' )
+
+                    # hide_registration_fields_except_tos = (
+                    #     (
+                    #         current_provider.skip_registration_form and enterprise_customer_for_request(request)
+                    #     ) or current_provider.sync_learner_profile_data
+                    # )
                     hide_registration_fields_except_tos = (
                         (
                             current_provider.skip_registration_form and enterprise_customer_for_request(request)
                         ) or current_provider.sync_learner_profile_data
                     )
 
-                    for field_name in self.DEFAULT_FIELDS + self.EXTRA_FIELDS:
-                        if field_name in field_overrides:
-                            form_desc.override_field_properties(
-                                field_name, default=field_overrides[field_name]
-                            )
+                    # for field_name in self.DEFAULT_FIELDS + self.EXTRA_FIELDS:
+                    #     if field_name in field_overrides:
+                    #         form_desc.override_field_properties(
+                    #             field_name, default=field_overrides[field_name]
+                    #         )
 
-                            if (
-                                field_name not in ['terms_of_service', 'honor_code'] and
-                                field_overrides[field_name] and
-                                hide_registration_fields_except_tos
-                            ):
-                                form_desc.override_field_properties(
-                                    field_name,
-                                    field_type="hidden",
-                                    label="",
-                                    instructions="",
-                                )
+                    #         if (
+                    #             field_name not in ['terms_of_service', 'honor_code'] and
+                    #             field_overrides[field_name] and
+                    #             hide_registration_fields_except_tos
+                    #         ):
+                    #             form_desc.override_field_properties(
+                    #                 field_name,
+                    #                 field_type="hidden",
+                    #                 label="",
+                    #                 instructions="",
+                    #             )
 
                     # Hide the confirm_email field
-                    form_desc.override_field_properties(
-                        "confirm_email",
-                        default="",
-                        field_type="hidden",
-                        required=False,
-                        label="",
-                        instructions="",
-                        restrictions={}
-                    )
+                    # form_desc.override_field_properties(
+                    #     "confirm_email",
+                    #     default="",
+                    #     field_type="hidden",
+                    #     required=False,
+                    #     label="",
+                    #     instructions="",
+                    #     restrictions={}
+                    # )
 
                     # Hide the password field
-                    form_desc.override_field_properties(
-                        "password",
-                        default="",
-                        field_type="hidden",
-                        required=False,
-                        label="",
-                        instructions="",
-                        restrictions={}
-                    )
+                    # form_desc.override_field_properties(
+                    #     "password",
+                    #     default="",
+                    #     field_type="hidden",
+                    #     required=False,
+                    #     label="",
+                    #     instructions="",
+                    #     restrictions={}
+                    # )
                     # used to identify that request is running third party social auth
                     form_desc.add_field(
                         "social_auth_provider",

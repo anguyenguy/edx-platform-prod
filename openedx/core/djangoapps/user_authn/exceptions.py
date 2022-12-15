@@ -20,7 +20,7 @@ class AuthFailedError(Exception):
         self.context = context
 
     def get_response(self):
-        """ Returns a dict representation of the error. """
+        """ Returns a dict representation of the error."""
         resp = {'success': False}
         for attr in ('value', 'redirect', 'redirect_url', 'error_code', 'context'):
             if self.__getattribute__(attr):

@@ -53,7 +53,7 @@ def expect_json(view_function):
             request.json = {}
 
         return view_function(request, *args, **kwargs)
-
+    
     return parse_json_into_request
 
 
@@ -73,6 +73,9 @@ class JsonResponse(HttpResponse):
         kwargs.setdefault("content_type", "application/json")
         if status:
             kwargs["status"] = status
+
+        # print('PP1:', '=========','content', content)
+        # print('PP1:', '=========','type(content)', type(content))
         super().__init__(content, *args, **kwargs)
 
 

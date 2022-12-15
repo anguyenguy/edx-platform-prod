@@ -1,13 +1,14 @@
 
 
-(function(globals) {
-
-  var django = globals.django || (globals.django = {});
+'use strict';
+{
+  const globals = this;
+  const django = globals.django || (globals.django = {});
 
   
   django.pluralidx = function(n) {
-    var v=0;
-    if (typeof(v) == 'boolean') {
+    const v = 0;
+    if (typeof v === 'boolean') {
       return v ? 1 : 0;
     } else {
       return v;
@@ -19,7 +20,7 @@
 
   django.catalog = django.catalog || {};
   
-  var newcatalog = {
+  const newcatalog = {
     " and ": "v\u00e0",
     "%(cohort_name)s (%(user_count)s)": "%(cohort_name)s (%(user_count)s)",
     "%(errorCount)s error found in form.": [
@@ -214,7 +215,6 @@
     "Basic Account Information": "Th\u00f4ng tin t\u00e0i kho\u1ea3n c\u01a1 b\u1ea3n",
     "Be sure your entire face is inside the frame": "H\u00e3y ch\u1eafc ch\u1eafn to\u00e0n b\u1ed9 khu\u00f4n m\u1eb7t c\u1ee7a b\u1ea1n trong khung",
     "Before proceeding, please confirm that your details match": "Tr\u01b0\u1edbc khi ti\u1ebfp t\u1ee5c, h\u00e3y ki\u1ec3m tra l\u1ea1i th\u00f4ng tin c\u1ee7a b\u1ea1n",
-    "Before proceeding, please {htmlStart}activate your account{htmlEnd}.": "Tr\u01b0\u1edbc khi ti\u1ebfp t\u1ee5c, vui l\u00f2ng {htmlStart}k\u00edch ho\u1ea1t t\u00e0i kho\u1ea3n c\u1ee7a b\u1ea1n{htmlEnd}.",
     "Before proceeding, please {htmlStart}unlink all social media accounts{htmlEnd}.": "Tr\u01b0\u1edbc khi ti\u1ebfp t\u1ee5c, vui l\u00f2ng {htmlStart}h\u1ee7y li\u00ean k\u1ebft t\u1ea5t c\u1ea3 c\u00e1c t\u00e0i kho\u1ea3n m\u1ea1ng x\u00e3 h\u1ed9i{htmlEnd}.",
     "Biography": "Ti\u1ec3u s\u1eed",
     "Blockquote": "\u0110o\u1ea1n tr\u00edch d\u1eabn",
@@ -975,7 +975,6 @@
     "Processing Re-run Request": "\u0110ang x\u1eed l\u00ed Y\u00eau c\u1ea7u Re-run ",
     "Proctored": "C\u00f3 gi\u00e1m s\u00e1t",
     "Proctored Exam": "Thi c\u00f3 gi\u00e1m s\u00e1t",
-    "Proctored exams are timed and they record video of each learner taking the exam. The videos are then reviewed to ensure that learners follow all examination rules.": "B\u00e0i thi c\u00f3 gi\u00e1m s\u00e1t \u0111\u01b0\u1ee3c t\u00ednh gi\u1edd v\u00e0 ghi l\u1ea1i video m\u1ed7i h\u1ecdc vi\u00ean tham d\u1ef1 b\u00e0i thi. C\u00e1c video n\u00e0y sau \u0111\u00f3 \u0111\u01b0\u1ee3c xem x\u00e9t \u0111\u1ec3 \u0111\u1ea3m b\u1ea3o r\u1eb1ng c\u00e1c h\u1ecdc vi\u00ean tu\u00e2n th\u1ee7 t\u1ea5t c\u1ea3 c\u00e1c quy t\u1eafc ki\u1ec3m tra.",
     "Professional Education": "Gi\u00e1o D\u1ee5c Chuy\u00ean Nghi\u1ec7p",
     "Professional Education Verified Certificate": "Gi\u1ea5y ch\u1ee9ng nh\u1eadn x\u00e1c th\u1ef1c cho gi\u00e1o d\u1ee5c chuy\u00ean nghi\u1ec7p",
     "Profile": "H\u1ed3 s\u01a1",
@@ -1593,7 +1592,7 @@
     "You have not created any group configurations yet.": "B\u1ea1n v\u1eabn ch\u01b0a t\u1ea1o m\u1ed9t c\u1ea5u h\u00ecnh nh\u00f3m n\u00e0o.",
     "You have selected an action, and you haven't made any changes on individual fields. You're probably looking for the Go button rather than the Save button.": "B\u1ea1n \u0111\u00e3 l\u1ef1a ch\u1ecdn m\u1ed9t h\u00e0nh \u0111\u1ed9ng, v\u00e0 b\u1ea1n \u0111\u00e3 kh\u00f4ng th\u1ef1c hi\u1ec7n b\u1ea5t k\u1ef3 thay \u0111\u1ed5i n\u00e0o tr\u00ean c\u00e1c tr\u01b0\u1eddng. C\u00f3 l\u1ebd b\u1ea1n \u0111ang t\u00ecm ki\u1ebfm n\u00fat b\u1ea5m Go thay v\u00ec n\u00fat b\u1ea5m Save.",
     "You have selected an action, but you haven't saved your changes to individual fields yet. Please click OK to save. You'll need to re-run the action.": "B\u1ea1n \u0111\u00e3 l\u1ef1a ch\u1ecdn m\u1ed9t h\u00e0nh \u0111\u1ed9ng, nh\u01b0ng b\u1ea1n kh\u00f4ng l\u01b0u thay \u0111\u1ed5i c\u1ee7a b\u1ea1n \u0111\u1ebfn c\u00e1c l\u0129nh v\u1ef1c c\u00e1 nh\u00e2n \u0111\u01b0\u1ee3c n\u00eau ra. Xin vui l\u00f2ng click OK \u0111\u1ec3 l\u01b0u l\u1ea1i. B\u1ea1n s\u1ebd c\u1ea7n ph\u1ea3i ch\u1ea1y l\u1ea1i c\u00e1c h\u00e0nh \u0111\u1ed9ng.",
-    "You have successfully signed into %(currentProvider)s, but your %(currentProvider)s account does not have a linked %(platformName)s account. To link your accounts, sign in now using your %(platformName)s password.": "B\u1ea1n \u0111\u00e3 \u0111\u0103ng nh\u1eadp th\u00e0nh c\u00f4ng v\u00e0o %(currentProvider)s, nh\u01b0ng t\u00e0i kho\u1ea3n c\u1ee7a b\u1ea1n %(currentProvider)s kh\u00f4ng \u0111\u01b0\u1ee3c li\u00ean k\u1ebft v\u00e0o t\u00e0i kho\u1ea3n %(platformName)s. \u0110\u1ec3 li\u00ean k\u1ebft c\u00e1c t\u00e0i kho\u1ea3n c\u1ee7a b\u1ea1n, \u0111\u0103ng nh\u1eadp ngay b\u1eb1ng %(platformName)s m\u1eadt kh\u1ea9u.",
+    "Bạn đã thành công %(currentProvider)s, but your %(currentProvider)s account does not have a linked %(platformName)s account. To link your accounts, sign in now using your %(platformName)s password.": "B\u1ea1n \u0111\u00e3 \u0111\u0103ng nh\u1eadp th\u00e0nh c\u00f4ng v\u00e0o %(currentProvider)s, nh\u01b0ng t\u00e0i kho\u1ea3n c\u1ee7a b\u1ea1n %(currentProvider)s kh\u00f4ng \u0111\u01b0\u1ee3c li\u00ean k\u1ebft v\u00e0o t\u00e0i kho\u1ea3n %(platformName)s. \u0110\u1ec3 li\u00ean k\u1ebft c\u00e1c t\u00e0i kho\u1ea3n c\u1ee7a b\u1ea1n, \u0111\u0103ng nh\u1eadp ngay b\u1eb1ng %(platformName)s m\u1eadt kh\u1ea9u.",
     "You have successfully updated your goal.": "B\u1ea1n \u0111\u00e3 c\u1eadp nh\u1eadt th\u00e0nh c\u00f4ng m\u1ee5c ti\u00eau c\u1ee7a m\u00ecnh.",
     "You have unsaved changes are you sure you want to navigate away?": "B\u1ea1n c\u00f2n ch\u01b0a l\u01b0u m\u1ed9t v\u00e0i thay \u0111\u1ed5i, b\u1ea1n ch\u1eafc ch\u1eafn mu\u1ed1n \u0111i\u1ec1u h\u01b0\u1edbng?",
     "You have unsaved changes on individual editable fields. If you run an action, your unsaved changes will be lost.": "B\u1ea1n ch\u01b0a l\u01b0u nh\u1eefng tr\u01b0\u1eddng \u0111\u00e3 ch\u1ec9nh s\u1eeda. N\u1ebfu b\u1ea1n ch\u1ecdn h\u00e0nh \u0111\u1ed9ng n\u00e0y, nh\u1eefng ch\u1ec9nh s\u1eeda ch\u01b0a \u0111\u01b0\u1ee3c l\u01b0u s\u1ebd b\u1ecb m\u1ea5t.",
@@ -1770,24 +1769,24 @@
     "{type} Progress": "{type} Ti\u1ebfn \u0111\u1ed9",
     "\u2026": "..."
   };
-  for (var key in newcatalog) {
+  for (const key in newcatalog) {
     django.catalog[key] = newcatalog[key];
   }
   
 
   if (!django.jsi18n_initialized) {
     django.gettext = function(msgid) {
-      var value = django.catalog[msgid];
-      if (typeof(value) == 'undefined') {
+      const value = django.catalog[msgid];
+      if (typeof value === 'undefined') {
         return msgid;
       } else {
-        return (typeof(value) == 'string') ? value : value[0];
+        return (typeof value === 'string') ? value : value[0];
       }
     };
 
     django.ngettext = function(singular, plural, count) {
-      var value = django.catalog[singular];
-      if (typeof(value) == 'undefined') {
+      const value = django.catalog[singular];
+      if (typeof value === 'undefined') {
         return (count == 1) ? singular : plural;
       } else {
         return value.constructor === Array ? value[django.pluralidx(count)] : value;
@@ -1797,16 +1796,16 @@
     django.gettext_noop = function(msgid) { return msgid; };
 
     django.pgettext = function(context, msgid) {
-      var value = django.gettext(context + '\x04' + msgid);
-      if (value.indexOf('\x04') != -1) {
+      let value = django.gettext(context + '\x04' + msgid);
+      if (value.includes('\x04')) {
         value = msgid;
       }
       return value;
     };
 
     django.npgettext = function(context, singular, plural, count) {
-      var value = django.ngettext(context + '\x04' + singular, context + '\x04' + plural, count);
-      if (value.indexOf('\x04') != -1) {
+      let value = django.ngettext(context + '\x04' + singular, context + '\x04' + plural, count);
+      if (value.includes('\x04')) {
         value = django.ngettext(singular, plural, count);
       }
       return value;
@@ -1829,15 +1828,12 @@
       "%Y-%m-%d %H:%M:%S",
       "%Y-%m-%d %H:%M:%S.%f",
       "%Y-%m-%d %H:%M",
-      "%Y-%m-%d",
       "%m/%d/%Y %H:%M:%S",
       "%m/%d/%Y %H:%M:%S.%f",
       "%m/%d/%Y %H:%M",
-      "%m/%d/%Y",
       "%m/%d/%y %H:%M:%S",
       "%m/%d/%y %H:%M:%S.%f",
-      "%m/%d/%y %H:%M",
-      "%m/%d/%y"
+      "%m/%d/%y %H:%M"
     ],
     "DATE_FORMAT": "\\N\\g\u00e0\\y d \\t\\h\u00e1\\n\\g n \\n\u0103\\m Y",
     "DATE_INPUT_FORMATS": [
@@ -1870,8 +1866,8 @@
   };
 
     django.get_format = function(format_type) {
-      var value = django.formats[format_type];
-      if (typeof(value) == 'undefined') {
+      const value = django.formats[format_type];
+      if (typeof value === 'undefined') {
         return format_type;
       } else {
         return value;
@@ -1890,6 +1886,5 @@
 
     django.jsi18n_initialized = true;
   }
-
-}(this));
+};
 

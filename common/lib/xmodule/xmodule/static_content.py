@@ -319,10 +319,10 @@ def main():
         installed_apps += ('edxval',)
     except ImportError:
         pass
-    settings.configure(
-        INSTALLED_APPS=installed_apps,
-    )
-    django.setup()
+    # settings.configure(
+    #     INSTALLED_APPS=installed_apps,
+    # )
+    # django.setup()
 
     args = docopt(main.__doc__)
     root = path(args['<output_root>'])

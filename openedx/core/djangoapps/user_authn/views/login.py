@@ -15,7 +15,6 @@ from django.contrib import admin
 from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth import login as django_login
 from django.contrib.auth.decorators import login_required
-from django.db.models import Q
 from django.http import HttpRequest, HttpResponse, HttpResponseForbidden
 from django.shortcuts import redirect
 from django.urls import reverse
@@ -30,6 +29,7 @@ from rest_framework.views import APIView
 
 from openedx_events.learning.data import UserData, UserPersonalData
 from openedx_events.learning.signals import SESSION_LOGIN_COMPLETED
+from openedx_filters.learning.filters import StudentLoginRequested
 
 from common.djangoapps import third_party_auth
 from common.djangoapps.edxmako.shortcuts import render_to_response
@@ -64,19 +64,43 @@ AUDIT_LOG = logging.getLogger("audit")
 USER_MODEL = get_user_model()
 
 
+
 def _do_third_party_auth(request):
+
     """
     User is already authenticated via 3rd party, now try to find and return their associated Django user.
     """
+    
     running_pipeline = pipeline.get(request)
+    # print("========> PP1:","running_pipeline['kwargs']: ", running_pipeline['kwargs'])
     username = running_pipeline['kwargs'].get('username')
     backend_name = running_pipeline['backend']
     third_party_uid = running_pipeline['kwargs']['uid']
     requested_provider = provider.Registry.get_from_pipeline(running_pipeline)
     platform_name = configuration_helpers.get_value("platform_name", settings.PLATFORM_NAME)
 
+
     try:
+        # print('pipeline.get_authenticated_user: ',pipeline.get_authenticated_user(requested_provider, username, third_party_uid))
         return pipeline.get_authenticated_user(requested_provider, username, third_party_uid)
+    except ValueError as ve:
+        AUDIT_LOG.info(
+            "Login failed - user with username {username} is not use FUNiX email to login, {ve} "
+        )
+        message = Text(_(
+            "Hiện tại bạn đang không dùng tài khoản email của FUNiX để đăng nhập, "
+            "bạn vui lòng đăng nhập lại hệ thống với tài khoản FUNiX (@funix.edu.vn). {blank_lines}"
+            "Recently, you are not use FUNiX email to login,"
+            "please login with FUNiX email (@funix.edu.vn) again!{blank_lines}"
+        )).format(
+            blank_lines=HTML('<br/><br/>'),
+            platform_name=platform_name,
+            provider_name=requested_provider.name,
+            register_label_strong=HTML('<strong>{register_text}</strong>').format(
+                register_text=_('Register')
+            )
+        )
+        raise AuthFailedError(message, error_code='is_not_funix_email')  # lint-amnesty, pylint: disable=raise-missing-from       
     except USER_MODEL.DoesNotExist:
         AUDIT_LOG.info(
             "Login failed - user with username {username} has no social auth "
@@ -84,7 +108,7 @@ def _do_third_party_auth(request):
                 username=username, backend_name=backend_name)
         )
         message = Text(_(
-            "You've successfully signed in to your {provider_name} account, "
+            "You have successfully signed into {provider_name}, "
             "but this account isn't linked with your {platform_name} account yet. {blank_lines}"
             "Use your {platform_name} username and password to sign in to {platform_name} below, "
             "and then link your {platform_name} account with {provider_name} from your dashboard. {blank_lines}"
@@ -98,41 +122,55 @@ def _do_third_party_auth(request):
                 register_text=_('Register')
             )
         )
-
         raise AuthFailedError(message, error_code='third-party-auth-with-no-linked-account')  # lint-amnesty, pylint: disable=raise-missing-from
 
 
-def _get_user_by_email(request):
+def _get_user_by_email(email):
     """
-    Finds a user object in the database based on the given request, ignores all fields except for email.
+    Finds a user object in the database based on the given email, ignores all fields except for email.
     """
-    if 'email' not in request.POST or 'password' not in request.POST:
-        raise AuthFailedError(_('There was an error receiving your login information. Please email us.'))
-
-    email = request.POST['email']
-
     try:
         return USER_MODEL.objects.get(email=email)
     except USER_MODEL.DoesNotExist:
-        digest = hashlib.shake_128(email.encode('utf-8')).hexdigest(16)  # pylint: disable=too-many-function-args
-        AUDIT_LOG.warning(f"Login failed - Unknown user email {digest}")
+        return None
 
 
-def _get_user_by_email_or_username(request):
+def _get_user_by_username(username):
+    """
+    Finds a user object in the database based on the given username.
+    """
+    try:
+        return USER_MODEL.objects.get(username=username)
+    except USER_MODEL.DoesNotExist:
+        return None
+
+
+def _get_user_by_email_or_username(request, api_version):
     """
     Finds a user object in the database based on the given request, ignores all fields except for email and username.
     """
-    if 'email_or_username' not in request.POST or 'password' not in request.POST:
+
+    is_api_v2 = api_version != API_V1
+    login_fields = ['email', 'password']
+    if is_api_v2:
+        login_fields = ['email_or_username', 'password']
+
+    if any(f not in request.POST.keys() for f in login_fields):
         raise AuthFailedError(_('There was an error receiving your login information. Please email us.'))
 
-    email_or_username = request.POST.get('email_or_username', None)
-    try:
-        return USER_MODEL.objects.get(
-            Q(username=email_or_username) | Q(email=email_or_username)
-        )
-    except USER_MODEL.DoesNotExist:
+    email_or_username = request.POST.get('email', None) or request.POST.get('email_or_username', None)
+    print('CLWG: ','email_or_username: ', email_or_username)
+    user = _get_user_by_email(email_or_username)
+
+    if not user and is_api_v2:
+        # If user not found with email and API_V2, try username lookup
+        user = _get_user_by_username(email_or_username)
+
+    if not user:
         digest = hashlib.shake_128(email_or_username.encode('utf-8')).hexdigest(16)  # pylint: disable=too-many-function-args
-        AUDIT_LOG.warning(f"Login failed - Unknown user username/email {digest}")
+        AUDIT_LOG.warning(f"Login failed - Unknown user email or username {digest}")
+
+    return user
 
 
 def _check_excessive_login_attempts(user):
@@ -164,7 +202,7 @@ def _generate_locked_out_error_message():
         error_message,
         error_code='account-locked-out',
         context={
-            'locked_out_period': int(locked_out_period_in_sec / 60)
+            'locked_out_period': int(locked_out_period_in_sec / 60)  
         }
     )
 
@@ -544,15 +582,21 @@ def login_user(request, api_version='v1'):
 
                 # user successfully authenticated with a third party provider, but has no linked Open edX account
                 response_content = e.get_response()
+                # print('PP1:', '=========','response_content: ' , response_content)
                 return JsonResponse(response_content, status=403)
-        elif api_version == API_V1:
-            user = _get_user_by_email(request)
         else:
-            user = _get_user_by_email_or_username(request)
-
+            user = _get_user_by_email_or_username(request, api_version)
+        
         _check_excessive_login_attempts(user)
 
         possibly_authenticated_user = user
+
+        try:
+            possibly_authenticated_user = StudentLoginRequested.run_filter(user=possibly_authenticated_user)
+        except StudentLoginRequested.PreventLogin as exc:
+            raise AuthFailedError(
+                str(exc), redirect_url=exc.redirect_to, error_code=exc.error_code, context=exc.context,
+            ) from exc
 
         if not is_user_third_party_authenticated:
             possibly_authenticated_user = _authenticate_first_party(request, user, third_party_auth_requested)
@@ -561,7 +605,9 @@ def login_user(request, api_version='v1'):
                 _enforce_password_policy_compliance(request, possibly_authenticated_user)
                 check_pwned_password_and_send_track_event.delay(user.id, request.POST.get('password'), user.is_staff)
 
-        if possibly_authenticated_user is None or not possibly_authenticated_user.is_active:
+        if possibly_authenticated_user is None or not (
+            possibly_authenticated_user.is_active or settings.MARKETING_EMAILS_OPT_IN
+        ):
             _handle_failed_authentication(user, possibly_authenticated_user)
 
         _handle_successful_authentication_and_login(possibly_authenticated_user, request)
@@ -593,7 +639,7 @@ def login_user(request, api_version='v1'):
         set_custom_attribute('login_user_auth_failed_error', False)
         set_custom_attribute('login_user_response_status', response.status_code)
         set_custom_attribute('login_user_redirect_url', redirect_url)
-        mark_user_change_as_expected(response, user.id)
+        mark_user_change_as_expected(user.id)
         return response
     except AuthFailedError as error:
         response_content = error.get_response()
@@ -702,3 +748,5 @@ def _parse_analytics_param_for_course_id(request):
                     analytics=analytics
                 )
             )
+
+

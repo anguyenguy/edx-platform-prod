@@ -330,6 +330,7 @@ def _get_user_course_outline_and_processors(course_key: CourseKey,  # lint-amnes
     set_custom_attribute('learning_sequences.api.user_id', user.id)
 
     full_course_outline = get_course_outline(course_key)
+
     user_can_see_all_content = can_see_all_content(user, course_key)
 
     # These are processors that alter which sequences are visible to students.
