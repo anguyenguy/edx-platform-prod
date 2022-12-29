@@ -2,7 +2,6 @@
 Helpers for the student app.
 """
 
-
 import json
 import logging
 import mimetypes
@@ -674,17 +673,6 @@ def process_survey_link(survey_link, user):
 
 
 def do_create_account(form, custom_form=None):
-# <<<<<<< HEAD
-# <<<<<<< HEAD
-#     #### print('PP1','======','do_create_account', form);
-# =======
-#     # print('PP1','======','do_create_account', form);
-#     # print('PP1','======','do_create_account type(form)', type(form));
-#     # print('PP1','======','do_create_account custom_form', custom_form);
-# >>>>>>> e48c28dc (Login with FUNiX Account)
-# =======
-#     #### print('PP1','======','do_create_account', form);
-# >>>>>>> 21883e00 (Update access details course)
     """
     Given cleaned post variables, create the User and UserProfile objects, as well as the
     registration for this user.
@@ -704,10 +692,8 @@ def do_create_account(form, custom_form=None):
     errors.update(form.errors)
     if custom_form:
         errors.update(custom_form.errors)
-
     if errors:
         raise ValidationError(errors)
-
     proposed_username = form.cleaned_data["username"]
     user = User(
         username=proposed_username,
@@ -722,12 +708,13 @@ def do_create_account(form, custom_form=None):
     # TODO: Rearrange so that if part of the process fails, the whole process fails.
     # Right now, we can have e.g. no registration e-mail sent out and a zombie account
     try:
-        with transaction.atomic():
-            user.save()
-            if custom_form:
-                custom_model = custom_form.save(commit=False)
-                custom_model.user = user
-                custom_model.save()
+        # Fix Bug #29122022
+        # with transaction.atomic():
+        user.save()
+        if custom_form:
+            custom_model = custom_form.save(commit=False)
+            custom_model.user = user
+            custom_model.save()
     except IntegrityError:
         # Figure out the cause of the integrity error
         # TODO duplicate email is already handled by form.errors above as a ValidationError.
@@ -750,8 +737,8 @@ def do_create_account(form, custom_form=None):
         else:
             raise
 
-    registration.register(user)
 
+    registration.register(user)
     profile_fields = [
         "name", "level_of_education", "gender", "mailing_address", "city", "country", "goals",
         "year_of_birth"
