@@ -342,6 +342,8 @@ def get_authenticated_user(auth_provider, username, uid):
         raise ValueError("This is not funix email")
     elif email_exists_or_retired(uid):
         # Fix Bug #29122022
+        
+        print('PP1:', '==========: ', 'Account: ', uid, 'existed!')
         user = User.objects.get(email=uid)
     else:
         print('PP1:', '==========: ', 'Create new account for user:', username)
