@@ -160,6 +160,7 @@ def create_account_with_params(request, params):  # pylint: disable=too-many-sta
     # Copy params so we can modify it; we can't just do dict(params) because if
     # params is request.POST, that results in a dict containing lists of values
     params = dict(list(params.items()))
+    # print("=================create_account_with_params:", params)
 
     # allow to define custom set of required/optional/hidden fields via configuration
     extra_fields = configuration_helpers.get_value(
@@ -207,7 +208,6 @@ def create_account_with_params(request, params):  # pylint: disable=too-many-sta
         registration_fields.get('terms_of_service') != 'hidden' or
         registration_fields.get('honor_code') != 'hidden'
     )
-    print('PP1','======','AccountCreationForm','  params= ' ,params,'   extra_fields= ',extra_fields,'   extended_profile_fields=', extended_profile_fields,'    tos_required=', tos_required);
     form = AccountCreationForm(
         data=params,
         extra_fields=extra_fields,
@@ -582,6 +582,7 @@ class RegistrationView(APIView):
             return response
 
         response, user = self._create_account(request, data)
+
         if response:
             return response
 

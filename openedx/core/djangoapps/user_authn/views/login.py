@@ -72,7 +72,6 @@ def _do_third_party_auth(request):
     """
     
     running_pipeline = pipeline.get(request)
-    # print("========> PP1:","running_pipeline['kwargs']: ", running_pipeline['kwargs'])
     username = running_pipeline['kwargs'].get('username')
     backend_name = running_pipeline['backend']
     third_party_uid = running_pipeline['kwargs']['uid']

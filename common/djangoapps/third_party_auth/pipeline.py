@@ -302,7 +302,7 @@ def _is_funix_email(email):
 def _create_random_password(length):
     letters = string.ascii_lowercase
     result_str = ''.join(random.choice(letters) for i in range(length))
-    print("Random string of length", length, "is:", result_str)
+    # print("Random string of length", length, "is:", result_str)
 ####==========================   END CUSTOM  ==============================
 
 

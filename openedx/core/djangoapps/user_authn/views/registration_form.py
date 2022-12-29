@@ -1126,7 +1126,6 @@ class RegistrationFormFactory:
                     # enterprise context, we need to hide all fields except for terms of service and
                     # ensure that the user explicitly checks that field.
                     # pylint: disable=consider-using-ternary
-                    print("PP1===========>", 'enterprise_customer_for_request is using.' )
 
                     # hide_registration_fields_except_tos = (
                     #     (

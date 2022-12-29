@@ -984,7 +984,7 @@ def set_score(user_id, usage_key, score, max_score):
                 **kwargs
             )
     except IntegrityError:
-        # log information for duplicate entry and get the record as above command failed.
+        # log information for  and get the record as above command failed.
         log.exception(
             'set_score: IntegrityError for student %s - course_id %s - usage_key %s having '
             'score %d and max_score %d',
