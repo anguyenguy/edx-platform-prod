@@ -708,13 +708,12 @@ def do_create_account(form, custom_form=None):
     # TODO: Rearrange so that if part of the process fails, the whole process fails.
     # Right now, we can have e.g. no registration e-mail sent out and a zombie account
     try:
-        # Fix Bug #29122022
-        # with transaction.atomic():
-        user.save()
-        if custom_form:
-            custom_model = custom_form.save(commit=False)
-            custom_model.user = user
-            custom_model.save()
+        with transaction.atomic():
+            user.save()
+            if custom_form:
+                custom_model = custom_form.save(commit=False)
+                custom_model.user = user
+                custom_model.save()
     except IntegrityError:
         # Figure out the cause of the integrity error
         # TODO duplicate email is already handled by form.errors above as a ValidationError.

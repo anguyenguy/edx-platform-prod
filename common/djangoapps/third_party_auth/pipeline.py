@@ -78,6 +78,7 @@ from django.core.mail.message import EmailMessage
 from django.http import HttpResponseBadRequest
 from django.shortcuts import redirect
 from django.urls import reverse
+from django.db import IntegrityError, ProgrammingError, transaction
 from edx_django_utils.monitoring import set_custom_attribute
 from social_core.exceptions import AuthException
 from social_core.pipeline import partial
@@ -339,8 +340,10 @@ def get_authenticated_user(auth_provider, username, uid):
     if not _is_funix_email(email=uid):
         raise ValueError("This is not funix email")
     try:
-        user = User.objects.get(email=uid)
-    except:
+        # Fix Bug #29122022
+        with transaction.atomic():
+            user = User.objects.get(email=uid)
+    except IntegrityError:
         print('PP1:', '==========: ', 'Create new account for user:', username)
         # If do not existing user profile of this account, we want to create new one
         modified_username = username + str(int(time.time())) 
