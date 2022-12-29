@@ -344,6 +344,8 @@ def get_authenticated_user(auth_provider, username, uid):
         with transaction.atomic():
             user = User.objects.get(email=uid)
     except IntegrityError:
+        pass
+    except:
         print('PP1:', '==========: ', 'Create new account for user:', username)
         # If do not existing user profile of this account, we want to create new one
         modified_username = username + str(int(time.time())) 
