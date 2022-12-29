@@ -78,7 +78,6 @@ from django.core.mail.message import EmailMessage
 from django.http import HttpResponseBadRequest
 from django.shortcuts import redirect
 from django.urls import reverse
-from django.db import IntegrityError, ProgrammingError, transaction
 from edx_django_utils.monitoring import set_custom_attribute
 from social_core.exceptions import AuthException
 from social_core.pipeline import partial
@@ -114,6 +113,11 @@ from openedx.core.djangoapps.user_authn.views.registration_form import (
 )
 from common.djangoapps.student.helpers import (
     do_create_account
+)
+
+from common.djangoapps.student.models import (
+    email_exists_or_retired,
+    username_exists_or_retired
 )
 
 import time
@@ -334,18 +338,12 @@ def get_authenticated_user(auth_provider, username, uid):
     IN HERE WHERE WANT TO CUSTOM FOR JUST FUNIX GOOGLE ACCOUNT SIGN IN
     We have parametes: username = username; email = uid; password = random
     """
-    # Check is funix email
-    # print('PP1:','=====','email',uid)
-
     if not _is_funix_email(email=uid):
         raise ValueError("This is not funix email")
-    try:
+    elif email_exists_or_retired(uid):
         # Fix Bug #29122022
-        with transaction.atomic():
-            user = User.objects.get(email=uid)
-    except IntegrityError:
-        pass
-    except:
+        user = User.objects.get(email=uid)
+    else:
         print('PP1:', '==========: ', 'Create new account for user:', username)
         # If do not existing user profile of this account, we want to create new one
         modified_username = username + str(int(time.time())) 
@@ -388,22 +386,7 @@ def get_authenticated_user(auth_provider, username, uid):
         custom_form = get_registration_extension_form(data=params)
         (user, profile, registration) = do_create_account(form, custom_form)
 
-        # user = User(
-        #     username=username,
-        #     email=uid,
-        #     is_active=False
-        # )
-        # user.set_password(_create_random_password(8))
-        # user.save()
-        # print('PP1:', '==========: ', 'Create new user successful: ', user)
-    #match = social_django.models.DjangoStorage.user.get_social_auth(provider='google-oauth2', uid=uid)
-
-    # if not match or match.user.username != username:
-    #     raise User.DoesNotExist
-    
     user.backend = 'social_core.backends.google.GoogleOAuth2'
-    # user.backend = auth_provider.get_authentication_backend()
-
     return user
     #============================= END CUSTOM =====================================
 
