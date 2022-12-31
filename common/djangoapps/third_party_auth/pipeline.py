@@ -335,19 +335,19 @@ def get_authenticated_user(auth_provider, username, uid):
     """
     #====================== CUSTOM FOR PP1 CUSTOM FUNCTION ============================
     """
-    IN HERE WHERE WANT TO CUSTOM FOR JUST FUNIX GOOGLE ACCOUNT SIGN IN
-    We have parametes: username = username; email = uid; password = random
+    FX Custom:
+        Create new user if no user is found
+        We have parametes: username = username; email = uid; password = random
     """
     if not _is_funix_email(email=uid):
         raise ValueError("This is not funix email")
     elif email_exists_or_retired(uid):
         # Fix Bug #29122022
-        
         print('PP1:', '==========: ', 'Account: ', uid, 'existed!')
         user = User.objects.get(email=uid)
     else:
-        print('PP1:', '==========: ', 'Create new account for user:', username)
         # If do not existing user profile of this account, we want to create new one
+        print('PP1:', '==========: ', 'Create new account for user:', username)
         modified_username = username + str(int(time.time())) 
         generate_pw = _create_random_password(8)
         params = {
