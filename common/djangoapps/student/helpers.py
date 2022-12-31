@@ -698,7 +698,7 @@ def do_create_account(form, custom_form=None):
     user = User(
         username=proposed_username,
         email=form.cleaned_data["email"],
-        ### PP1: We want to active user after login the first time, change is_active = False => True
+        #.. FX Custom .. PP1: We want to active user after login the first time
         is_active=True
     )
     password = normalize_password(form.cleaned_data["password"])
@@ -721,6 +721,9 @@ def do_create_account(form, custom_form=None):
         # AccountValidationError and a consistent user message returned (i.e. both should
         # return "It looks like {username} belongs to an existing account. Try again with a
         # different username.")
+        
+        # .. FX Custom: #29122022 
+        print('INFO: ', 'FX Custom', '===', 'IntegrityError')
         if username_exists_or_retired(user.username):  # lint-amnesty, pylint: disable=no-else-raise
             raise AccountValidationError(  # lint-amnesty, pylint: disable=raise-missing-from
                 USERNAME_EXISTS_MSG_FMT.format(username=proposed_username),

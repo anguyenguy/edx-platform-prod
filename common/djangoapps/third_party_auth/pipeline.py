@@ -296,9 +296,8 @@ def lift_quarantine(request):
     """
     request.session.pop('third_party_auth_quarantined_modules', None)
 
-####===================== CUSTOM FOR PP1 FUNCTION ========================
+# .. FX Custom ===================== CUSTOM FOR PP1 FUNCTION ========================
 def _is_funix_email(email):
-    # emails of FUNiX has to contain @funix.edu.vn in the end.
     _funix_email_tail = '@funix.edu.vn'
     if not email[-13:].__eq__(_funix_email_tail):
         return False
@@ -307,8 +306,8 @@ def _is_funix_email(email):
 def _create_random_password(length):
     letters = string.ascii_lowercase
     result_str = ''.join(random.choice(letters) for i in range(length))
-    # print("Random string of length", length, "is:", result_str)
-####==========================   END CUSTOM  ==============================
+    return result_str
+#.. FX Custom ==========================   END CUSTOM  ==============================
 
 
 def get_authenticated_user(auth_provider, username, uid):
@@ -343,11 +342,11 @@ def get_authenticated_user(auth_provider, username, uid):
         raise ValueError("This is not funix email")
     elif email_exists_or_retired(uid):
         # Fix Bug #29122022
-        print('PP1:', '==========: ', 'Account: ', uid, 'existed!')
+        print('INFO: ','FX Custom ','PP1:', '=== ', 'Account: ', uid, 'existed!')
         user = User.objects.get(email=uid)
     else:
         # If do not existing user profile of this account, we want to create new one
-        print('PP1:', '==========: ', 'Create new account for user:', username)
+        print('INFO: ','FX Custom ','PP1:', '=== ', 'Create new account for user:', username)
         modified_username = username + str(int(time.time())) 
         generate_pw = _create_random_password(8)
         params = {

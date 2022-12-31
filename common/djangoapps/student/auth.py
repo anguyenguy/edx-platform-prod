@@ -144,7 +144,6 @@ def add_users(caller, role, *users):
     :param caller: a user
     :param role: an AccessRole
     """
-    print("===================Add user")
     _check_caller_authority(caller, role)
     role.add_users(*users)
 
