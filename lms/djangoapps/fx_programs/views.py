@@ -1,10 +1,31 @@
 from rest_framework.views import APIView
 from rest_framework import status
 from rest_framework.response import Response
+
 from django.core import serializers
+from django.template import loader
+from django.shortcuts import render
+
+from common.djangoapps.edxmako.shortcuts import render_to_response
 import numpy as np
+import requests
+import json
 
 from .models import FxPrograms
+
+
+def index(request):
+    program_list = FxPrograms.objects.all()
+    if not program_list:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+    serialized_programs = serializers.serialize('json', program_list)
+    response_dict = {
+        'status': 200,
+        'programs': json.loads(serialized_programs),
+    }
+
+    return render(request, 'programs_list.html', response_dict)
+
 
 class FxProgramsView(APIView):
     """
@@ -14,7 +35,7 @@ class FxProgramsView(APIView):
 
     **Example Request**
 
-        GET /api/fx_programs/v1/fx_programs 
+        GET /api/fx_programs/v1/fx_programs
 
     **Response Values**
         {
@@ -51,10 +72,11 @@ class FxProgramsView(APIView):
             print("..FUNiX Custom ..", serialized_programs)
             response_dict = {
                 'status': 200,
-                'programs': serialized_programs,
+                'programs': eval(serialized_programs),
             }
             # response_dict[programs] = programs
-            
+
             return Response(data=response_dict, status=status.HTTP_200_OK)
         except:
             return Response(status=status.HTTP_400_BAD_REQUEST)
+
