@@ -8,25 +8,9 @@ def index(request):
     try:
         programs = FxPrograms.objects.all()
 
-        program_list = []
-
-        for program in programs:
-            metadata = program.metadata
-            for course_id in program.id_course_list.split(","):
-                if course_id:
-                    course = metadata[course_id]
-                    program_list.append({
-                        'program_name': program.name,
-                        "program_id": program.program_id,
-                        'course_id': course['id'],
-                        'course_name': course['display_name'],
-                        'language': course['language'],
-                        'course_image_url': course['course_image_url'],
-                    })
-
         context = {
             'status': '200',
-            'programs': program_list
+            'programs': programs
         }
 
         print("..FUNiX Custom ..", context)
